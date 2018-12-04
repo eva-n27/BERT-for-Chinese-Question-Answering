@@ -768,7 +768,7 @@ def run_evaluate(args, model, eval_features, device, eval_examples, tokenizer, b
     dev_score = evaluate(dataset, predict, tokenizer)['f1']
     logger.info('Dev score : {}'.format(dev_score))
 
-    if best_dev_score and dev_score > best_dev_score:
+    if best_dev_score is not None and dev_score > best_dev_score:
         logger.info('Saving model with dev score: {}'.format(dev_score))
         best_dev_score = dev_score
         write_to_file(predict, nbest, output_prediction_file, output_nbest_file)

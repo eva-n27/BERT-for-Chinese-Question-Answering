@@ -905,8 +905,8 @@ def main():
         raise ValueError("Output directory () already exists and is not empty.")
     os.makedirs(args.output_dir, exist_ok=True)
 
-    if not os.path.exists(args.ft_dir):
-        os.makedirs(args.ft_dir, exist_ok=True)
+    if not os.path.exists(args.finetuned_checkpoint):
+        os.makedirs(args.finetuned_checkpoint, exist_ok=True)
 
     tokenizer = tokenization.FullTokenizer(
         vocab_file=args.vocab_file, do_lower_case=args.do_lower_case)

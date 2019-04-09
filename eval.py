@@ -2,6 +2,7 @@
 from __future__ import print_function
 from collections import Counter
 import string
+from zhon import hanzi as zh
 import re
 import argparse
 import json
@@ -17,7 +18,7 @@ def normalize_answer(s):
         return ' '.join(text.split())
 
     def remove_punc(text):
-        exclude = set(string.punctuation)
+        exclude = set(string.punctuation + zh.punctuation)
         return ''.join(ch for ch in text if ch not in exclude)
 
     def lower(text):
@@ -40,7 +41,8 @@ def f1_score(prediction, ground_truth, tokenizer):
 
 
 def exact_match_score(prediction, ground_truth, tokenizer):
-    return (tokenizer.tokenize(normalize_answer(prediction)) == tokenizer.tokenize(normalize_answer(ground_truth)))
+    return (''.join(tokenizer.tokenize(normalize_answer(prediction))) ==
+            ''.join(tokenizer.tokenize(normalize_answer(ground_truth))))
 
 
 def metric_max_over_ground_truths(metric_fn, prediction, ground_truths, tokenizer):
@@ -57,14 +59,17 @@ def evaluate(dataset, predictions, tokenizer):
         for paragraph in article['paragraphs']:
             for qa in paragraph['qas']:
                 total += 1
-                if str(qa['id']) not in predictions:
+                if str(qa['id']) not in predictions and int(qa['id']) not in predictions:
                     message = 'Unanswered question ' + str(qa['id']) + \
                               ' will receive score 0.'
                     print(message, file=sys.stderr)
                     continue
                 ground_truths = list(map(lambda x: x['text'], qa['answers']))
-                prediction = predictions[str(qa['id'])]
-                if ground_truths[0] in prediction:
+                try:
+                    prediction = predictions[str(qa['id'])]
+                except KeyError:
+                    prediction = predictions[int(qa['id'])]
+                if ground_truths[0].lower() in prediction:
                     acc += 1
                 exact_match += metric_max_over_ground_truths(
                     exact_match_score, prediction, ground_truths, tokenizer)
@@ -74,8 +79,7 @@ def evaluate(dataset, predictions, tokenizer):
     exact_match = 100.0 * exact_match / total
     f1 = 100.0 * f1 / total
     acc = 100.0 * acc / total
-
-    return {'exact_match': exact_match, 'f1': f1, 'acc':acc}
+    return {'exact_match': exact_match, 'f1': f1, 'acc': acc}
 
 
 if __name__ == '__main__':
